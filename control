@@ -1,0 +1,9 @@
+Package: com.yourcompany.nezu-tweak
+Name: nezu-tweak
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome Orion tweak!
+Maintainer: nezumi0627
+Author: nezumi0627
+Section: Tweaks
+Depends: ${ORION}, firmware (>= 12.2)
