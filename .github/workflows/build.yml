@@ -13,14 +13,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build (Release)
+      - name: Build macOS dylib (Release)
         run: swift build -c release
 
-      - name: Upload CI artifact
+      - name: Build iOS arm64 dylib (Release)
+        run: |
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
+          mkdir -p .build/release-ios
+          cp .build/ios/arm64-apple-ios15.0/release/libMyLibrary.dylib .build/release-ios/libMyLibrary_iOS.dylib
+
+      - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MyLibrary.dylib
-          path: .build/release/libMyLibrary.dylib
+          name: MyLibrary.dylibs
+          path: |
+            .build/release/libMyLibrary.dylib
+            .build/release-ios/libMyLibrary_iOS.dylib
 
   release:
     needs: build
