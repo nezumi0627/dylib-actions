@@ -18,17 +18,17 @@ jobs:
       - name: Build iOS arm64 dylib (Release)
         run: |
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          swift build -c release --package-path nezu-tweak --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
-          IOS_LIB=$(find .build/ios -name libMyLibrary.dylib -print -quit)
+          swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
+          IOS_LIB=$(find .build/ios -name libnezu_tweak.dylib -print -quit)
           mkdir -p .build/release-ios
-          cp "$IOS_LIB" .build/release-ios/libMyLibrary.dylib
+          cp "$IOS_LIB" .build/release-ios/libnezu_tweak.dylib
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
           name: MyLibrary_iOS
           path: |
-            .build/release-ios/libMyLibrary.dylib
+            .build/release-ios/libnezu_tweak.dylib
 
   release:
     needs: build

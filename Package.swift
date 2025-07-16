@@ -70,6 +70,7 @@ let package = Package(
     products: [
         .library(
             name: "nezu-tweak",
+            type: .dynamic,
             targets: ["nezu-tweak"]
         ),
     ],
