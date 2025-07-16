@@ -76,13 +76,13 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "nezu-tweakC",
+            name: "nezu_tweakC",
             cSettings: [.unsafeFlags(cFlags)],
             cxxSettings: [.unsafeFlags(cxxFlags)]
         ),
         .target(
             name: "nezu-tweak",
-            dependencies: ["nezu-tweakC"],
+            dependencies: ["nezu_tweakC"],
             swiftSettings: [.unsafeFlags(swiftFlags)]
         ),
     ]

@@ -1,4 +1,4 @@
-module nezu-tweakC {
+module nezu_tweakC {
     umbrella "."
     export *
 }
