@@ -18,6 +18,10 @@ jobs:
       - name: Install ldid
         run: brew install ldid
 
+      - name: Set Orion Framework Path
+        run: |
+          export ORION_FRAMEWORK_PATH=$(pwd)/Orion_1.0.2
+
       - name: Build tweak
         run: |
           export THEOS=$HOME/theos
