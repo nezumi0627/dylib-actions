@@ -20,8 +20,9 @@ jobs:
         run: |
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
+          IOS_LIB=$(find .build/ios -name libMyLibrary.dylib -print -quit)
           mkdir -p .build/release-ios
-          cp .build/ios/arm64-apple-ios15.0/release/libMyLibrary.dylib .build/release-ios/libMyLibrary_iOS.dylib
+          cp "$IOS_LIB" .build/release-ios/libMyLibrary_iOS.dylib
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
@@ -43,13 +44,13 @@ jobs:
       - name: Download dylib artifact
         uses: actions/download-artifact@v4
         with:
-          name: MyLibrary.dylib
+          name: MyLibrary.dylibs
           path: dist
 
       - name: Zip dylib
         run: |
           cd dist
-          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary.dylib
+          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary*.dylib
 
       - name: Create GitHub Release & upload asset
         uses: softprops/action-gh-release@v2
