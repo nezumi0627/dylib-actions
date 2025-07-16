@@ -1,28 +1,20 @@
-name: Build & Release Swift dylib
+name: Build dylib
 
-on:
-  push:
-    branches: [ '**' ]
-    tags:     [ 'v*' ]
+on: [push, workflow_dispatch]
 
 jobs:
-  build:
-    runs-on: macos-latest
+  build-dylib:
+    runs-on: macos-14
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
-
-
-      - name: Install Theos
+      - name: Install Theos & Orion
         run: |
           git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
-        env:
-          THEOS: $HOME/theos
-
-      - name: Download Orion framework binary
-        run: |
           ORION_VER=1.2.1
           mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
           curl -L -o orion.tar.gz "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-iphoneos.tar.gz"
@@ -30,50 +22,16 @@ jobs:
           curl -L -o orion_headers.zip "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-headers.zip"
           unzip -q orion_headers.zip -d "$HOME/theos/vendor/include"
 
-      - name: Generate SPM config
-        run: |
-          export THEOS=$HOME/theos
-          make spm
-
-      - name: Build iOS arm64 dylib (Release)
+      - name: Build dylib (Swift, arm64 iOS)
         run: |
           export THEOS=$HOME/theos
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
-          IOS_LIB=$(find .build/ios -name libnezu_tweak.dylib -print -quit)
           mkdir -p .build/release-ios
-          cp "$IOS_LIB" .build/release-ios/libnezu_tweak.dylib
+          find .build/ios -name '*.dylib' -exec cp {} .build/release-ios/ \;
 
-      - name: Upload CI artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload dylib artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: nezu_tweak_iOS
-          path: |
-            .build/release-ios/libnezu_tweak.dylib
-
-  release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download dylib artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: nezu_tweak_iOS
-          path: dist
-
-      - name: Zip dylib
-        run: |
-          cd dist
-          zip nezu_tweak-${{ github.ref_name }}.zip libnezu_tweak.dylib
-
-      - name: Create GitHub Release & upload asset
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/nezu_tweak-${{ github.ref_name }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: nezu_tweak_dylib
+          path: .build/release-ios/*.dylib
