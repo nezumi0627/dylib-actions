@@ -12,20 +12,14 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Theos & Orion
+      - name: Install Theos
         run: |
           git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
-          ORION_VER=1.2.1
-          mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
-          curl -L -o orion.tar.gz "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-iphoneos.tar.gz"
-          tar -xzf orion.tar.gz -C "$HOME/theos/vendor/lib"
-          curl -L -o orion_headers.zip "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-headers.zip"
-          unzip -q orion_headers.zip -d "$HOME/theos/vendor/include"
 
       - name: Install ldid
         run: brew install ldid
 
-      - name: Build dylib (Swift, arm64 iOS)
+      - name: Build tweak
         run: |
           export THEOS=$HOME/theos
           make
