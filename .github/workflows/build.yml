@@ -21,13 +21,14 @@ jobs:
         env:
           THEOS: $HOME/theos
 
-      - name: Install Orion framework
+      - name: Download Orion framework binary
         run: |
-          git clone --depth=1 https://github.com/theos/orion.git "$HOME/orion"
-          make -C "$HOME/orion" framework THEOS="$HOME/theos"
+          ORION_VER=1.2.1
           mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
-          cp -R "$HOME/orion/bin/Orion.framework" "$HOME/theos/vendor/lib/"
-          cp -R "$HOME/orion/include/Orion" "$HOME/theos/vendor/include/"
+          curl -L -o orion.tar.gz "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-iphoneos.tar.gz"
+          tar -xzf orion.tar.gz -C "$HOME/theos/vendor/lib"
+          curl -L -o orion_headers.zip "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-headers.zip"
+          unzip -q orion_headers.zip -d "$HOME/theos/vendor/include"
 
       - name: Generate SPM config
         run: |
