@@ -6,11 +6,6 @@ jobs:
   build-dylib:
     runs-on: macos-14
 
-    env:
-      THEOS: $HOME/theos
-      USE_ORION: 1
-      ORION_EMBED_FRAMEWORK: 1
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -18,13 +13,17 @@ jobs:
           submodules: true
 
       - name: Install Theos
-        run: git clone --depth=1 --recursive https://github.com/theos/theos.git "$THEOS"
+        run: git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
 
       - name: Install ldid
         run: brew install ldid
 
       - name: Build tweak
-        run: make
+        run: |
+          export THEOS=$HOME/theos
+          export USE_ORION=1
+          export ORION_EMBED_FRAMEWORK=1
+          make
 
       - name: Upload dylib artifact
         uses: actions/upload-artifact@v4
