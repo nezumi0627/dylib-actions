@@ -1,0 +1,50 @@
+name: Build & Release Swift dylib
+
+on:
+  push:
+    branches: [ main ]
+    tags:     [ 'v*' ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build (Release)
+        run: swift build -c release
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyLibrary.dylib
+          path: .build/release/libMyLibrary.dylib
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download dylib artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: MyLibrary.dylib
+          path: dist
+
+      - name: Zip dylib
+        run: |
+          cd dist
+          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary.dylib
+
+      - name: Create GitHub Release & upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/MyLibrary-${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
