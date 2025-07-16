@@ -21,6 +21,14 @@ jobs:
         env:
           THEOS: $HOME/theos
 
+      - name: Install Orion framework
+        run: |
+          git clone --depth=1 https://github.com/theos/orion.git "$HOME/orion"
+          make -C "$HOME/orion" framework THEOS="$HOME/theos"
+          mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
+          cp -R "$HOME/orion/bin/Orion.framework" "$HOME/theos/vendor/lib/"
+          cp -R "$HOME/orion/include/Orion" "$HOME/theos/vendor/include/"
+
       - name: Generate SPM config
         run: |
           export THEOS=$HOME/theos
@@ -38,7 +46,7 @@ jobs:
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MyLibrary_iOS
+          name: nezu_tweak_iOS
           path: |
             .build/release-ios/libnezu_tweak.dylib
 
@@ -54,7 +62,7 @@ jobs:
       - name: Download dylib artifact
         uses: actions/download-artifact@v4
         with:
-          name: MyLibrary_iOS
+          name: nezu_tweak_iOS
           path: dist
 
       - name: Zip dylib
