@@ -31,7 +31,7 @@ jobs:
           find .build/ios -name '*.dylib' -exec cp {} .build/release-ios/ \;
 
       - name: Upload dylib artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nezu_tweak_dylib
           path: .build/release-ios/*.dylib
