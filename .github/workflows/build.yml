@@ -1,36 +1,45 @@
-name: Build dylib
+name: Build dylib only
 
-on: [push, workflow_dispatch]
+on:
+  push:
 
 jobs:
-  build-dylib:
-    runs-on: macos-14
+  build:
+    runs-on: macos-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      # 1. チェックアウト
+      - uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Install Theos
-        run: git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
-
-      - name: Install ldid
-        run: brew install ldid
-
-      - name: Set Orion Framework Path
+      # 2. キャッシュキー取得
+      - name: Cache key setup
         run: |
-          export ORION_FRAMEWORK_PATH=$(pwd)/Orion_1.0.2
+          echo upstream_heads=$(git ls-remote https://github.com/theos/theos | head -n 1 | cut -f 1)-$(git ls-remote https://github.com/theos/sdks | head -n 1 | cut -f 1) >> $GITHUB_ENV
 
-      - name: Build tweak
-        run: |
-          export THEOS=$HOME/theos
-          export USE_ORION=1
-          export ORION_EMBED_FRAMEWORK=1
-          make
-
-      - name: Upload dylib artifact
-        uses: actions/upload-artifact@v4
+      # 3. キャッシュの使用
+      - name: Use cache
+        uses: actions/cache@v3
         with:
-          name: nezu_tweak_dylib
+          path: ${{ github.workspace }}/theos
+          key: ${{ runner.os }}-${{ env.upstream_heads }}
+
+      # 4. Theos + Orion セットアップ
+      - name: Install Theos (with Orion)
+        uses: Randomblock1/theos-action@v1.3
+        with:
+          orion: "true"
+
+      # 5. dylib のビルド
+      - name: Build .dylib only
+        run: |
+          make clean
+          make FINALPACKAGE=0
+
+      # 6. .dylib をアップロード
+      - name: Upload .dylib
+        uses: actions/upload-artifact@v3
+        with:
+          name: "Built dylib"
           path: .theos/obj/debug/*.dylib

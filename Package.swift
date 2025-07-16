@@ -5,7 +5,8 @@ import Foundation
 
 let projectDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
 
-@dynamicMemberLookup struct TheosConfiguration {
+@dynamicMemberLookup
+struct TheosConfiguration {
     private let dict: [String: String]
     init(at path: String) {
         let configURL = URL(fileURLWithPath: path, relativeTo: projectDir)
@@ -15,10 +16,7 @@ let projectDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             """)
         }
         let pairs = infoString.split(separator: "\n").map {
-            $0.split(
-                separator: "=", maxSplits: 1,
-                omittingEmptySubsequences: false
-            ).map(String.init)
+            $0.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
         }.map { ($0[0], $0[1]) }
         dict = Dictionary(uniqueKeysWithValues: pairs)
     }
@@ -39,6 +37,7 @@ let projectDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
     }
     subscript(dynamicMember key: String) -> String { self[key] }
 }
+
 let conf = TheosConfiguration(at: ".theos/spm_config")
 
 let theosPath = conf.theos
@@ -52,37 +51,24 @@ let libFlags: [String] = [
     "-I\(theosPath)/vendor/include", "-I\(theosPath)/include"
 ]
 
-let cFlags: [String] = libFlags + [
-    "-target", triple, "-isysroot", sdk,
-    "-Wno-unused-command-line-argument", "-Qunused-arguments",
-]
-
-let cxxFlags: [String] = [
-]
-
 let swiftFlags: [String] = libFlags + [
-    "-target", triple, "-sdk", sdk, "-resource-dir", resourceDir,
+    "-target", triple, "-sdk", sdk, "-resource-dir", resourceDir
 ]
 
 let package = Package(
-    name: "nezutweak",
+    name: "NezuTweak",
     platforms: [.iOS(deploymentTarget)],
     products: [
         .library(
-            name: "nezutweak",
-            targets: ["nezutweak"]
+            name: "NezuTweak",
+            targets: ["NezuTweak"]
         ),
     ],
     targets: [
         .target(
-            name: "nezutweakC",
-            cSettings: [.unsafeFlags(cFlags)],
-            cxxSettings: [.unsafeFlags(cxxFlags)]
-        ),
-        .target(
-            name: "nezutweak",
-            dependencies: ["nezutweakC"],
+            name: "NezuTweak",
+            path: "Sources/NezuTweak",
             swiftSettings: [.unsafeFlags(swiftFlags)]
-        ),
+        )
     ]
 )

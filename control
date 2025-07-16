@@ -1,9 +1,11 @@
-Package: com.yourcompany.nezu_tweak
-Name: nezu_tweak
-Version: 0.0.1
+Package: dev.beefers.nezu_tweak
+Name: Nezu Tweak
+Version: 0.0.2
 Architecture: iphoneos-arm
-Description: An awesome Orion tweak!
-Maintainer: nezumi0627
-Author: nezumi0627
+Description: A mod for Discord's mobile apps.
+Maintainer: FieryFlames
+Author: FieryFlames
+Icon: https://avatars.githubusercontent.com/u/112445065
 Section: Tweaks
-Depends: ${ORION}, firmware (>= 12.2)
+Depends: ${ORION}, firmware (>= 13.0)
+Conflicts: app.enmity, mod.nezutweak
