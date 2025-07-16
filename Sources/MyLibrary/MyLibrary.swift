@@ -1,33 +1,24 @@
 import Foundation
-#if canImport(UIKit)
 import UIKit
-#endif
-#if canImport(AppKit) && !targetEnvironment(macCatalyst)
-import AppKit
-#endif
 
 private let _dylibLoaded: Void = {
-    #if canImport(UIKit)
     DispatchQueue.main.async {
-        if let rootVC = UIApplication.shared.windows.first?.rootViewController {
+        // iOS 13 以降の WindowScene 対応
+        let rootVC = UIApplication.shared
+            .connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first(where: { $0.isKeyWindow })?
+            .rootViewController
+
+        if let rootVC = rootVC {
             let alert = UIAlertController(title: "[MyLibrary]", message: "dylib loaded", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             rootVC.present(alert, animated: true)
         } else {
-            fputs("[MyLibrary] dylib loaded (UIKit, no root VC)\n", stderr)
+            fputs("[MyLibrary] dylib loaded (no root ViewController found)\n", stderr)
         }
     }
-    #elseif canImport(AppKit) && !targetEnvironment(macCatalyst)
-    DispatchQueue.main.async {
-        let alert = NSAlert()
-        alert.messageText = "[MyLibrary]"
-        alert.informativeText = "dylib loaded"
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
-    }
-    #else
-    fputs("[MyLibrary] dylib loaded\n", stderr)
-    #endif
 }()
 
 public func greet() {
