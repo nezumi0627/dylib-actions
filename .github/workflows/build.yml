@@ -12,23 +12,18 @@ jobs:
         with:
           submodules: true
 
-      - name: Install Theos & Orion
-        run: |
-          git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
-          ORION_VER=1.2.1
-          mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
-          curl -L -o orion.tar.gz "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-iphoneos.tar.gz"
-          tar -xzf orion.tar.gz -C "$HOME/theos/vendor/lib"
-          curl -L -o orion_headers.zip "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-headers.zip"
-          unzip -q orion_headers.zip -d "$HOME/theos/vendor/include"
+      - name: Clone Theos (with Orion)
+        run: git clone --recursive https://github.com/theos/theos.git "$HOME/theos"
+        env:
+          THEOS: $HOME/theos
 
-      - name: Build dylib (Swift, arm64 iOS)
+      - name: Build dylib using Theos
         run: |
           export THEOS=$HOME/theos
-          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-          swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
+          make clean
+          make
           mkdir -p .build/release-ios
-          find .build/ios -name '*.dylib' -exec cp {} .build/release-ios/ \;
+          find . -name '*.dylib' -exec cp {} .build/release-ios/ \;
 
       - name: Upload dylib artifact
         uses: actions/upload-artifact@v4
