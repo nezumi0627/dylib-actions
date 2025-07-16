@@ -22,7 +22,6 @@ jobs:
           IOS_LIB=$(find .build/ios -name libMyLibrary.dylib -print -quit)
           mkdir -p .build/release-ios
           cp "$IOS_LIB" .build/release-ios/libMyLibrary.dylib
-          install_name_tool -id @rpath/libMyLibrary.dylib .build/release-ios/libMyLibrary.dylib
 
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
