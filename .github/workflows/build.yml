@@ -15,8 +15,20 @@ jobs:
 
 
 
+      - name: Install Theos
+        run: |
+          git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
+        env:
+          THEOS: $HOME/theos
+
+      - name: Generate SPM config
+        run: |
+          export THEOS=$HOME/theos
+          make spm
+
       - name: Build iOS arm64 dylib (Release)
         run: |
+          export THEOS=$HOME/theos
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           swift build -c release --triple arm64-apple-ios15.0 --sdk "$SDK_PATH" --build-path .build/ios
           IOS_LIB=$(find .build/ios -name libnezu_tweak.dylib -print -quit)
@@ -48,11 +60,11 @@ jobs:
       - name: Zip dylib
         run: |
           cd dist
-          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary.dylib
+          zip nezu_tweak-${{ github.ref_name }}.zip libnezu_tweak.dylib
 
       - name: Create GitHub Release & upload asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/MyLibrary-${{ github.ref_name }}.zip
+          files: dist/nezu_tweak-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
