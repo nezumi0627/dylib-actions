@@ -65,13 +65,13 @@ let swiftFlags: [String] = libFlags + [
 ]
 
 let package = Package(
-    name: "nezu-tweak",
+    name: "nezu_tweak",
     platforms: [.iOS(deploymentTarget)],
     products: [
         .library(
-            name: "nezu-tweak",
+            name: "nezu_tweak",
             type: .dynamic,
-            targets: ["nezu-tweak"]
+            targets: ["nezu_tweak"]
         ),
     ],
     targets: [
@@ -81,7 +81,7 @@ let package = Package(
             cxxSettings: [.unsafeFlags(cxxFlags)]
         ),
         .target(
-            name: "nezu-tweak",
+            name: "nezu_tweak",
             dependencies: ["nezu_tweakC"],
             swiftSettings: [.unsafeFlags(swiftFlags)]
         ),

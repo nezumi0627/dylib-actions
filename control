@@ -1,5 +1,5 @@
-Package: com.yourcompany.nezu-tweak
-Name: nezu-tweak
+Package: com.yourcompany.nezu_tweak
+Name: nezu_tweak
 Version: 0.0.1
 Architecture: iphoneos-arm
 Description: An awesome Orion tweak!
