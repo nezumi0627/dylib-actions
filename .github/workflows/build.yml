@@ -13,7 +13,7 @@ jobs:
         with:
           submodules: true
 
-      # 2. キャッシュキー取得
+      # 2. キャッシュキー取得（TheosとSDK）
       - name: Cache key setup
         run: |
           echo upstream_heads=$(git ls-remote https://github.com/theos/theos | head -n 1 | cut -f 1)-$(git ls-remote https://github.com/theos/sdks | head -n 1 | cut -f 1) >> $GITHUB_ENV
@@ -31,13 +31,18 @@ jobs:
         with:
           orion: "true"
 
-      # 5. dylib のビルド
+      # 5. 不要な Substrate (simulator向け) を削除してリンカエラーを防ぐ
+      - name: Disable Substrate (remove .tbd)
+        run: |
+          rm -f $THEOS/vendor/lib/CydiaSubstrate.framework/CydiaSubstrate.tbd || true
+
+      # 6. dylib のビルド
       - name: Build .dylib only
         run: |
-          make clean
+          make veryclean
           make FINALPACKAGE=0
 
-      # 6. .dylib をアップロード
+      # 7. .dylib をアップロード
       - name: Upload .dylib
         uses: actions/upload-artifact@v4
         with:

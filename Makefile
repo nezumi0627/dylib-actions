@@ -1,50 +1,20 @@
-name: Build dylib only
+ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
+	TARGET := iphone:clang:latest:15.0
+else
+	TARGET := iphone:clang:latest:12.2
+endif
 
-on:
-  push:
+export USE_ORION = 1
+export ORION_EMBED_FRAMEWORK = 1
+export ORION_FRAMEWORK_PATH = $(shell pwd)/Orion_1.0.2
+export USE_SUBSTRATE = 0
 
-jobs:
-  build:
-    runs-on: macos-latest
+include $(THEOS)/makefiles/common.mk
 
-    steps:
-      # 1. チェックアウト
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
+TWEAK_NAME = nezutweak
 
-      # 2. キャッシュキー取得（TheosとSDK）
-      - name: Cache key setup
-        run: |
-          echo upstream_heads=$(git ls-remote https://github.com/theos/theos | head -n 1 | cut -f 1)-$(git ls-remote https://github.com/theos/sdks | head -n 1 | cut -f 1) >> $GITHUB_ENV
+nezutweak_FILES = $(shell find Sources/nezutweak -name '*.swift')
+nezutweak_SWIFTFLAGS =
+nezutweak_CFLAGS =
 
-      # 3. キャッシュの使用
-      - name: Use cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/theos
-          key: ${{ runner.os }}-${{ env.upstream_heads }}
-
-      # 4. Theos + Orion セットアップ
-      - name: Install Theos (with Orion)
-        uses: Randomblock1/theos-action@v1.3
-        with:
-          orion: "true"
-
-      # 5. 不要な Substrate (simulator向け) を削除してリンカエラーを防ぐ
-      - name: Disable Substrate (remove .tbd)
-        run: |
-          rm -f $THEOS/vendor/lib/CydiaSubstrate.framework/CydiaSubstrate.tbd || true
-
-      # 6. dylib のビルド
-      - name: Build .dylib only
-        run: |
-          make veryclean
-          make FINALPACKAGE=0
-
-      # 7. .dylib をアップロード
-      - name: Upload .dylib
-        uses: actions/upload-artifact@v4
-        with:
-          name: "Built dylib"
-          path: .theos/obj/debug/*.dylib
+include $(THEOS)/makefiles/tweak.mk
