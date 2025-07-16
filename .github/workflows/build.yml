@@ -13,8 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build macOS dylib (Release)
-        run: swift build -c release
+
 
       - name: Build iOS arm64 dylib (Release)
         run: |
@@ -27,9 +26,8 @@ jobs:
       - name: Upload CI artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: MyLibrary.dylibs
+          name: MyLibrary_iOS
           path: |
-            .build/release/libMyLibrary.dylib
             .build/release-ios/libMyLibrary_iOS.dylib
 
   release:
@@ -44,13 +42,13 @@ jobs:
       - name: Download dylib artifact
         uses: actions/download-artifact@v4
         with:
-          name: MyLibrary.dylibs
+          name: MyLibrary_iOS
           path: dist
 
       - name: Zip dylib
         run: |
           cd dist
-          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary*.dylib
+          zip MyLibrary-${{ github.ref_name }}.zip libMyLibrary_iOS.dylib
 
       - name: Create GitHub Release & upload asset
         uses: softprops/action-gh-release@v2
