@@ -4,7 +4,8 @@ else
 	TARGET := iphone:clang:latest:12.2
 endif
 
-export THEOS = $(HOME)/theos
+# GitHub Actions 環境では THEOS は自動定義されるので不要
+# export THEOS = $(HOME)/theos
 export USE_ORION = 1
 export ORION_EMBED_FRAMEWORK = 1
 export ORION_FRAMEWORK_PATH = $(shell pwd)/Orion_1.0.2
