@@ -12,21 +12,26 @@ jobs:
         with:
           submodules: true
 
-      - name: Clone Theos (with Orion)
-        run: git clone --recursive https://github.com/theos/theos.git "$HOME/theos"
-        env:
-          THEOS: $HOME/theos
+      - name: Install Theos & Orion
+        run: |
+          git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
+          ORION_VER=1.2.1
+          mkdir -p "$HOME/theos/vendor/lib" "$HOME/theos/vendor/include"
+          curl -L -o orion.tar.gz "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-iphoneos.tar.gz"
+          tar -xzf orion.tar.gz -C "$HOME/theos/vendor/lib"
+          curl -L -o orion_headers.zip "https://github.com/theos/orion/releases/download/$ORION_VER/Orion-headers.zip"
+          unzip -q orion_headers.zip -d "$HOME/theos/vendor/include"
 
-      - name: Build dylib using Theos
+      - name: Install ldid
+        run: brew install ldid
+
+      - name: Build dylib (Swift, arm64 iOS)
         run: |
           export THEOS=$HOME/theos
-          make clean
           make
-          mkdir -p .build/release-ios
-          find . -name '*.dylib' -exec cp {} .build/release-ios/ \;
 
       - name: Upload dylib artifact
         uses: actions/upload-artifact@v4
         with:
           name: nezu_tweak_dylib
-          path: .build/release-ios/*.dylib
+          path: .theos/obj/debug/*.dylib
