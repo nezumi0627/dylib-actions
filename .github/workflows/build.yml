@@ -28,7 +28,7 @@ jobs:
         with:
           name: MyLibrary_iOS
           path: |
-            .build/release-ios/libMyLibrary_iOS.dylib
+            .build/release-ios/libMyLibrary.dylib
 
   release:
     needs: build
