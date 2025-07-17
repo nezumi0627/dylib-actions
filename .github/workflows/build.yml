@@ -64,12 +64,15 @@ jobs:
         curl -fsSL https://github.com/theos/theos/archive/master.tar.gz | tar -xz
         mv theos-master/* /opt/theos/
 
-        # Download iOS SDK
+        # Download iOS SDKs
         curl -fsSL https://github.com/theos/sdks/archive/master.tar.gz | tar -xz
         mv sdks-master/* /opt/theos/sdks/
 
         # Set permissions
         chmod -R 755 /opt/theos/bin
+
+        # ✅ Install vendor dependencies (libsubstrate, etc.)
+        /opt/theos/bin/update-theos
 
     - name: Build Dylib
       run: |
