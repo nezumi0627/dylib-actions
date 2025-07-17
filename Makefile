@@ -7,7 +7,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = test
 
-test_FILES = Tweak.x
+test_FILES = NezuTweak/Tweak.x
 test_CFLAGS = -fobjc-arc
 
 include $(THEOS_MAKE_PATH)/tweak.mk
