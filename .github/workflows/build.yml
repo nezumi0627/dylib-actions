@@ -15,22 +15,15 @@ jobs:
       - name: Install Theos
         run: |
           git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
+          $HOME/theos/bin/update-theos
 
       - name: Install ldid
         run: brew install ldid
-
-      - name: Prepare Orion framework (if included)
-        run: |
-          # 必要に応じてOrion Frameworkを含める（Orion_1.0.2/ がリポジトリ内にある前提）
-          echo "ORION_FRAMEWORK_PATH=$(pwd)/Orion_1.0.2" >> $GITHUB_ENV
 
       - name: Build tweak
         run: |
           export THEOS=$HOME/theos
           export PATH=$THEOS/bin:$PATH
-          export USE_ORION=1
-          export ORION_EMBED_FRAMEWORK=1
-
           make clean || true
           make
 
@@ -45,12 +38,8 @@ jobs:
             exit 1
           fi
 
-      - name: Upload artifacts
+      - name: Upload built dylib
         uses: actions/upload-artifact@v4
         with:
           name: tweak-x-dylib
-          path: |
-            .theos/obj/debug/*.dylib
-            NezuTweak.plist
-            NezuTweak/Tweak.x
-            control
+          path: .theos/obj/debug/*.dylib
