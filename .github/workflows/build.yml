@@ -1,106 +1,56 @@
-name: iOS Tweak Build
+name: Build Tweak.x dylib
 
-on:
-  push:
-    # ✅ すべてのブランチに対応
-    branches: [ "**" ]
-  pull_request:
-    # ✅ すべてのブランチに対応
-    branches: [ "**" ]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
-  build-dylib:
-    runs-on: macos-latest
+  build-tweak:
+    runs-on: macos-14
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable
+      - name: Install Theos
+        run: |
+          git clone --depth=1 --recursive https://github.com/theos/theos.git "$HOME/theos"
 
-    - name: Verify Project Files
-      run: |
-        echo "Checking project structure..."
-        ls -la
+      - name: Install ldid
+        run: brew install ldid
 
-        # Check required files
-        if [ ! -f "Makefile" ]; then
-            echo "❌ Makefile not found"
+      - name: Prepare Orion framework (if included)
+        run: |
+          # 必要に応じてOrion Frameworkを含める（Orion_1.0.2/ がリポジトリ内にある前提）
+          echo "ORION_FRAMEWORK_PATH=$(pwd)/Orion_1.0.2" >> $GITHUB_ENV
+
+      - name: Build tweak
+        run: |
+          export THEOS=$HOME/theos
+          export PATH=$THEOS/bin:$PATH
+          export USE_ORION=1
+          export ORION_EMBED_FRAMEWORK=1
+
+          make clean || true
+          make
+
+      - name: Show built dylib
+        run: |
+          DYLIB=$(find .theos -name "*.dylib" | head -1)
+          if [ -f "$DYLIB" ]; then
+            echo "✅ Built dylib: $DYLIB"
+            file "$DYLIB"
+          else
+            echo "❌ Failed to find dylib"
             exit 1
-        fi
+          fi
 
-        if [ ! -f "NezuTweak/Tweak.x" ]; then
-            echo "❌ NezuTweak/Tweak.x not found"
-            exit 1
-        fi
-
-        if [ ! -f "NezuTweak.plist" ]; then
-            echo "❌ NezuTweak.plist not found"
-            exit 1
-        fi
-
-        if [ ! -f "control" ]; then
-            echo "❌ control file not found"
-            exit 1
-        fi
-
-        echo "✅ All required files found"
-
-        # Display project structure
-        echo "Project structure:"
-        find . -type f -name "*.x" -o -name "Makefile" -o -name "*.plist" -o -name "control" | sort
-
-    - name: Install THEOS
-      run: |
-        # Create THEOS directory
-        sudo mkdir -p /opt/theos
-        sudo chown -R $(whoami):staff /opt/theos
-
-        # Download and install THEOS
-        curl -fsSL https://github.com/theos/theos/archive/master.tar.gz | tar -xz
-        mv theos-master/* /opt/theos/
-
-        # Download iOS SDKs
-        curl -fsSL https://github.com/theos/sdks/archive/master.tar.gz | tar -xz
-        mv sdks-master/* /opt/theos/sdks/
-
-        # Set permissions
-        chmod -R 755 /opt/theos/bin
-
-        # ✅ Install vendor dependencies (libsubstrate, etc.)
-        /opt/theos/bin/update-theos
-
-    - name: Build Dylib
-      run: |
-        export THEOS=/opt/theos
-        export PATH=/opt/theos/bin:$PATH
-
-        # Clean and build
-        make clean || true
-        make
-
-        # Find and copy dylib
-        DYLIB_FILE=$(find .theos -name "*.dylib" | head -1)
-        if [ -f "$DYLIB_FILE" ]; then
-            echo "✅ Dylib built successfully: $DYLIB_FILE"
-            cp "$DYLIB_FILE" ./NezuTweak.dylib
-            file ./NezuTweak.dylib
-        else
-            echo "❌ Dylib build failed"
-            exit 1
-        fi
-
-    - name: Upload Dylib Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: nezu-tweak-dylib
-        path: |
-          NezuTweak.dylib
-          NezuTweak.plist
-          NezuTweak/Tweak.x
-          control
-        retention-days: 30
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tweak-x-dylib
+          path: |
+            .theos/obj/debug/*.dylib
+            NezuTweak.plist
+            NezuTweak/Tweak.x
+            control
