@@ -1,7 +1,7 @@
-ARCHS = armv7 arm64
-
+ARCHS = arm64
 INSTALL_TARGET_PROCESSES = LINE
-export SDKVERSION = 11.2
+
+TARGET = iphone:clang:latest:latest
 
 include $(THEOS)/makefiles/common.mk
 
