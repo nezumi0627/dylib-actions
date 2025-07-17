@@ -1,20 +1,13 @@
-ifeq ($(THEOS_PACKAGE_SCHEME),rootless)
-	TARGET := iphone:clang:latest:15.0
-else
-	TARGET := iphone:clang:latest:12.2
-endif
+ARCHS = armv7 arm64
 
-export USE_ORION = 1
-export ORION_EMBED_FRAMEWORK = 1
-export ORION_FRAMEWORK_PATH = $(shell pwd)/Orion_1.0.2
-export USE_SUBSTRATE = 0
+INSTALL_TARGET_PROCESSES = LINE
+export SDKVERSION = 11.2
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = nezutweak
+TWEAK_NAME = test
 
-nezutweak_FILES = $(shell find Sources/nezutweak -name '*.swift')
-nezutweak_SWIFTFLAGS =
-nezutweak_CFLAGS =
+test_FILES = Tweak.x
+test_CFLAGS = -fobjc-arc
 
-include $(THEOS)/makefiles/tweak.mk
+include $(THEOS_MAKE_PATH)/tweak.mk

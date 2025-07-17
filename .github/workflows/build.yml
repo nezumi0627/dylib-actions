@@ -1,49 +1,101 @@
-name: Build dylib only
+name: iOS Tweak Build
 
 on:
   push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-dylib:
     runs-on: macos-latest
-
+    
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - name: Cache key setup
-        run: |
-          echo upstream_heads=$(git ls-remote https://github.com/theos/theos | head -n 1 | cut -f 1)-$(git ls-remote https://github.com/theos/sdks | head -n 1 | cut -f 1) >> $GITHUB_ENV
-
-      - name: Use cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/theos
-          key: ${{ runner.os }}-${{ env.upstream_heads }}
-
-      - name: Install Theos (with Orion)
-        uses: Randomblock1/theos-action@v1.3
-        with:
-          orion: "true"
-
-      # 🚫 不要な Substrate.tbd を削除（リンクエラー防止）
-      - name: Disable Substrate (remove .tbd)
-        run: |
-          rm -f $THEOS/vendor/lib/CydiaSubstrate.framework/CydiaSubstrate.tbd || true
-
-      # 🔧 make clean（veryclean は存在しない）
-      - name: Clean
-        run: |
-          make clean
-
-      # 🛠️ dylibビルド（.debは作らない）
-      - name: Build .dylib only
-        run: |
-          make FINALPACKAGE=0
-
-      - name: Upload .dylib
-        uses: actions/upload-artifact@v4
-        with:
-          name: "Built dylib"
-          path: .theos/obj/debug/*.dylib
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Verify Project Files
+      run: |
+        echo "Checking project structure..."
+        ls -la
+        
+        # Check required files
+        if [ ! -f "Makefile" ]; then
+            echo "❌ Makefile not found"
+            exit 1
+        fi
+        
+        if [ ! -f "NezuTweak/Tweak.x" ]; then
+            echo "❌ NezuTweak/Tweak.x not found"
+            exit 1
+        fi
+        
+        if [ ! -f "NezuTweak.plist" ]; then
+            echo "❌ NezuTweak.plist not found"
+            exit 1
+        fi
+        
+        if [ ! -f "control" ]; then
+            echo "❌ control file not found"
+            exit 1
+        fi
+        
+        echo "✅ All required files found"
+        
+        # Display project structure
+        echo "Project structure:"
+        find . -type f -name "*.x" -o -name "Makefile" -o -name "*.plist" -o -name "control" | sort
+        
+    - name: Install THEOS
+      run: |
+        # Create THEOS directory
+        sudo mkdir -p /opt/theos
+        sudo chown -R $(whoami):staff /opt/theos
+        
+        # Download and install THEOS
+        curl -fsSL https://github.com/theos/theos/archive/master.tar.gz | tar -xz
+        mv theos-master/* /opt/theos/
+        
+        # Download iOS SDK
+        curl -fsSL https://github.com/theos/sdks/archive/master.tar.gz | tar -xz
+        mv sdks-master/* /opt/theos/sdks/
+        
+        # Set permissions
+        chmod -R 755 /opt/theos/bin
+        
+    - name: Build Dylib
+      run: |
+        export THEOS=/opt/theos
+        export PATH=/opt/theos/bin:$PATH
+        
+        # Clean and build
+        make clean || true
+        make
+        
+        # Find and copy dylib
+        DYLIB_FILE=$(find .theos -name "*.dylib" | head -1)
+        if [ -f "$DYLIB_FILE" ]; then
+            echo "✅ Dylib built successfully: $DYLIB_FILE"
+            cp "$DYLIB_FILE" ./NezuTweak.dylib
+            file ./NezuTweak.dylib
+        else
+            echo "❌ Dylib build failed"
+            exit 1
+        fi
+        
+    - name: Upload Dylib Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nezu-tweak-dylib
+        path: |
+          NezuTweak.dylib
+          NezuTweak.plist
+          NezuTweak/Tweak.x
+          control
+        retention-days: 30
